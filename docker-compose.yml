@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  zabbix-server:
+    build:
+      context: ./zabbix
+    volumes:
+      - ./zabbix/config/zabbix_server.conf:/etc/zabbix/zabbix_server.conf
+    networks:
+      - monitoring
+    environment:
+      DB_SERVER: "db"
+      DB_NAME: "zabbix"
+      DB_USER: "zabbix"
+      DB_PASSWORD: "zabbix"
+
+  zabbix-web-nginx:
+    build:
+      context: ./zabbix
+    depends_on:
+      - zabbix-server
+    networks:
+      - monitoring
+    ports:
+      - "8080:8080"
+    environment:
+      ZBX_SERVER: "zabbix-server"
+
+  grafana:
+    build:
+      context: ./grafana
+    depends_on:
+      - zabbix-server
+    networks:
+      - monitoring
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
+
+networks:
+  monitoring:
+    driver: bridge
